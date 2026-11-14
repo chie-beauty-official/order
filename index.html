@@ -66,6 +66,7 @@
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; margin-top: 28px; }
   .cat + .grid { margin-top: 0; }
   .item { background: var(--card); border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 4px 16px rgba(139, 53, 99, .06); position: relative; }
+  /* 写真の上下に余白の帯を取り、容量・番号・寿康美の印が商品に重ならないようにする */
   .item .photo { aspect-ratio: 1 / 1; background: linear-gradient(180deg, #fff, #fbeaf1); display: flex; align-items: center; justify-content: center; }
   .item .photo img { width: 100%; height: 100%; object-fit: contain; }
   .item .photo .noimg { color: var(--main-soft); font-size: 12px; letter-spacing: .1em; }
@@ -73,8 +74,8 @@
   .maker { position: absolute; left: 12px; bottom: 12px; font-family: "Noto Serif JP", serif; font-size: 14px; font-weight: 700; letter-spacing: .16em;
     color: #3b260c; background: rgba(247, 223, 228, .95); border: 2px solid #ad8235; border-radius: 999px; padding: 4px 13px 4px 15px;
     box-shadow: 0 2px 8px rgba(91, 56, 16, .22), inset 0 0 0 2px rgba(255, 255, 255, .9), inset 0 0 0 3px rgba(201, 164, 84, .8); }
-  .medal { position: absolute; left: 6px; top: 30px; width: 96px; height: 96px; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center;
-    text-align: center; color: #3b260c; font-weight: 900; font-size: 17px; line-height: 1.25; letter-spacing: -.04em;
+  .medal { position: absolute; left: 6px; top: 30px; width: 84px; height: 84px; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; color: #3b260c; font-weight: 900; font-size: 15px; line-height: 1.25; letter-spacing: -.04em;
     background: radial-gradient(circle at 50% 46%, #f8e8b1 0%, #e6bd59 62%, #c78d24 100%); border: 3px solid #9b6410;
     box-shadow: 0 5px 18px rgba(105, 65, 8, .38), inset 0 2px 3px rgba(255, 255, 255, .82), inset 0 0 0 4px rgba(199, 149, 52, .9);
     text-shadow: -1px -1px 0 #fffdf5, 1px -1px 0 #fffdf5, -1px 1px 0 #fffdf5, 1px 1px 0 #fffdf5; transform: rotate(-6deg); }
@@ -89,7 +90,7 @@
   .item h3 { font-size: 16px; margin: 0 0 8px; line-height: 1.5; }
   .item h3 small { display: block; font-family: "Noto Sans JP", sans-serif; font-size: 12px; color: var(--sub); }
   .item .desc { font-size: 12.5px; color: var(--sub); margin: 0 0 14px; white-space: pre-line; flex: 1; }
-  .buy { display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; }
+  .buy { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 8px; }
   .price { font-size: 19px; font-weight: 700; }
   .price { white-space: nowrap; }
   .price small { font-size: 11px; font-weight: 400; color: var(--sub); margin-left: 4px; }
@@ -145,7 +146,30 @@
   .done-no { font-size: 20px; letter-spacing: .06em; color: var(--main); margin: 6px 0 0; }
   .notice { font-size: 12px; color: var(--sub); line-height: 1.9; }
 
+  /* 容量・商品番号は写真の上の帯に、寿康美・おすすめ印は写真の下に出す（商品に重ねない） */
+  .item .vol { position: static; order: -1; min-height: 38px; padding: 10px 46px 8px 14px; line-height: 1.5; }
+  .item .num { top: 6px; right: 10px; }
+  .badge-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; }
+  .badge-row span { white-space: nowrap; border-radius: 999px; padding: 2px 12px; font-size: 13px; line-height: 1.6; color: #3b260c; }
+  .badge-row .pick { font-weight: 900; font-size: 14px; padding: 3px 14px; background: linear-gradient(180deg, #f8e8b1 0%, #e6bd59 70%, #d3a13a 100%); border: 2px solid #9b6410;
+    box-shadow: 0 2px 6px rgba(105, 65, 8, .28), inset 0 1px 2px rgba(255, 255, 255, .85); text-shadow: 0 1px 0 rgba(255, 253, 245, .9); }
+  .badge-row .pick::before { content: "★ "; color: #9b6410; }
+  .badge-row .mk { font-family: "Noto Serif JP", serif; font-weight: 700; letter-spacing: .16em; background: #f7dfe4; border: 2px solid #ad8235;
+    box-shadow: 0 1px 4px rgba(91, 56, 16, .18), inset 0 0 0 1.5px rgba(255, 255, 255, .9); }
   @media (max-width: 520px) {
+    /* スマホ：写真の上の印は消して、写真の下に小さく並べる */
+    .item .vol { min-height: 32px; padding: 8px 38px 6px 12px; }
+    /* 「CHIE価格」などのラベルつき価格が、狭いカードからはみ出さないようにする */
+    .price { white-space: normal; font-size: 17px; }
+    .price-label { display: block; width: fit-content; margin: 0 0 2px; }
+    .buy > div { min-width: 0; }
+    .gate-card { padding: 36px 22px; }
+    .gate-card h1 { font-size: 19px; letter-spacing: .02em; }
+    .item .num { top: 5px; right: 8px; width: 22px; height: 22px; line-height: 22px; font-size: 10px; }
+    .badge-row { gap: 5px; margin-bottom: 8px; }
+    .badge-row span { padding: 1px 9px; font-size: 11px; border-width: 1.5px; }
+    .badge-row .pick { font-size: 11.5px; padding: 1px 9px; border-width: 1.5px; }
+    .badge-row .mk { letter-spacing: .12em; border-width: 1.5px; }
     .grid { grid-template-columns: 1fr 1fr; gap: 12px; }
     .item .body { padding: 12px; }
     .item h3 { font-size: 14px; }
@@ -384,18 +408,15 @@
 
   function card(p) {
     var nm = splitName(p.name);
-    // おすすめ印は「ちえ／イチオシ！」のように2行のメダルにする
-    var medal = '';
-    if (p.badge) {
-      var cut = p.badge.indexOf('ちえ') === 0 ? 2 : 0;
-      medal = '<span class="medal" aria-label="' + esc(p.badge) + '">' +
-        (cut ? '<span>' + esc(p.badge.slice(0, cut)) + '</span>' : '') + '<span>' + esc(p.badge.slice(cut)) + '</span></span>';
-    }
     return '<article class="item">' +
       '<div class="photo">' + (p.img ? '<img loading="lazy" src="' + esc(p.img) + '" alt="' + esc(p.name) + '">' : '<span class="noimg">NO IMAGE</span>') +
-      medal + (p.maker ? '<span class="maker">' + esc(p.maker) + '</span>' : '') + '</div>' +
+      '</div>' +
       '<span class="vol">' + esc(p.volume) + '</span><span class="num">' + p.no + '</span>' +
       '<div class="body">' +
+      // 印は写真に重ねず、写真の下に並べる（商品が隠れないように）
+      (p.badge || p.maker ? '<div class="badge-row">' +
+        (p.badge ? '<span class="pick">' + esc(p.badge) + '</span>' : '') +
+        (p.maker ? '<span class="mk">' + esc(p.maker) + '</span>' : '') + '</div>' : '') +
       '<h3>' + esc(nm[0]) + (nm[1] ? '<small>' + esc(nm[1]) + '</small>' : '') + '</h3>' +
       '<p class="desc">' + esc(p.desc) + '</p>' +
       '<div class="buy"><div>' +
