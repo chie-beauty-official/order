@@ -151,6 +151,12 @@
   /* 容量・商品番号は写真の上の帯に、寿康美・おすすめ印は写真の下に出す（商品に重ねない） */
   .item .vol { position: static; order: -1; min-height: 38px; padding: 10px 46px 8px 14px; line-height: 1.5; }
   .item .num { top: 6px; right: 10px; }
+  /* リンクで指定された商品を、数秒間光らせて目立たせる */
+  .item.focus { animation: itemFocus 3.2s ease-out 1; }
+  @keyframes itemFocus {
+    0%, 55% { box-shadow: 0 0 0 4px var(--main), 0 0 24px 6px rgba(139, 53, 99, .35); }
+    100% { box-shadow: 0 0 0 0 rgba(139, 53, 99, 0), 0 4px 16px rgba(139, 53, 99, .06); }
+  }
   .badge-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; }
   .badge-row span { white-space: nowrap; border-radius: 999px; padding: 2px 12px; font-size: 13px; line-height: 1.6; color: #3b260c; }
   .badge-row .pick { font-weight: 900; font-size: 14px; padding: 3px 14px; background: linear-gradient(180deg, #f8e8b1 0%, #e6bd59 70%, #d3a13a 100%); border: 2px solid #9b6410;
@@ -389,6 +395,22 @@
     renderCatalog();
     $('gate').classList.add('hidden'); $('app').classList.remove('hidden');
     show('shop');
+    if (focusNo) setTimeout(focusItem, 350);
+  }
+
+  /* ---- 記事などから「?item=商品番号」つきで開いたとき、その商品へ移動して目立たせる ---- */
+  var focusNo = (function () {
+    var m = location.search.match(/[?&]item=(\d+)/) || location.hash.match(/item-?(\d+)/);
+    return m ? Number(m[1]) : null;
+  })();
+  if (!focusNo && google.script && google.script.url) {
+    google.script.url.getLocation(function (loc) { if (loc && loc.parameter && loc.parameter.item) focusNo = Number(loc.parameter.item); });
+  }
+  function focusItem() {
+    var el = document.getElementById('item-' + focusNo);
+    if (!el) return;
+    el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    el.classList.remove('focus'); void el.offsetWidth; el.classList.add('focus');
   }
 
   /* ---- 商品一覧 ---- */
@@ -410,7 +432,7 @@
 
   function card(p) {
     var nm = splitName(p.name);
-    return '<article class="item">' +
+    return '<article class="item" id="item-' + p.no + '">' +
       '<div class="photo">' + (p.img ? '<img loading="lazy" src="' + esc(p.img) + '" alt="' + esc(p.name) + '">' : '<span class="noimg">NO IMAGE</span>') +
       '</div>' +
       '<span class="vol">' + esc(p.volume) + '</span><span class="num">' + p.no + '</span>' +
