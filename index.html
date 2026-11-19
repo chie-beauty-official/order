@@ -367,6 +367,19 @@
 
   var state = { pw: '', products: [], byNo: {}, cfg: null, cart: {}, customer: null };
 
+  /* ---- パスワードをこの端末に覚えておく（一度入った人は次回から入力不要） ---- */
+  var PW_KEY = 'chie_order_pw';
+  function savePw(pw) { try { localStorage.setItem(PW_KEY, pw); } catch (e) { /* 保存できない端末では毎回入力 */ } }
+  function loadPw() { try { return localStorage.getItem(PW_KEY) || ''; } catch (e) { return ''; } }
+  function clearPw() { try { localStorage.removeItem(PW_KEY); } catch (e) { /* 何もしない */ } }
+
+  function enterShop(pw, res) {
+    state.pw = pw; state.products = res.products; state.cfg = res.cfg;
+    res.products.forEach(function (p) { state.byNo[p.no] = p; });
+    savePw(pw);
+    startShop();
+  }
+
   /* ---- 入口 ---- */
   $('gateForm').addEventListener('submit', function (e) {
     e.preventDefault();
@@ -375,9 +388,7 @@
     $('gateBtn').disabled = true; $('gateBtn').textContent = '確認中…'; $('gateError').textContent = '';
     api('apiLogin', pw).then(function (res) {
       if (!res || !res.ok) { $('gateError').textContent = 'パスワードが違います。'; return; }
-      state.pw = pw; state.products = res.products; state.cfg = res.cfg;
-      res.products.forEach(function (p) { state.byNo[p.no] = p; });
-      startShop();
+      enterShop(pw, res);
     }).catch(function () {
       $('gateError').textContent = '通信に失敗しました。少し時間をおいてお試しください。';
     }).then(function () { $('gateBtn').disabled = false; $('gateBtn').textContent = 'サイトを開く'; });
@@ -599,7 +610,11 @@
     btn.disabled = true; btn.textContent = '送信中…'; $('backToForm').disabled = true; $('orderError').textContent = '';
     var payload = { customer: state.customer, items: lines().map(function (l) { return { no: l.no, qty: l.qty }; }) };
     api('apiOrder', state.pw, payload).then(function (res) {
-      if (!res || !res.ok) { $('orderError').textContent = (res && res.message) || '注文を送信できませんでした。'; return; }
+      if (!res || !res.ok) {
+        if (res && res.message && res.message.indexOf('パスワード') !== -1) clearPw(); // パスワードが変わっていたら覚えたものを消す
+        $('orderError').textContent = (res && res.message) || '注文を送信できませんでした。';
+        return;
+      }
       $('doneNo').textContent = res.orderNo;
       $('doneTotal').textContent = yen(res.sum.total);
       $('doneBank').innerHTML = '<dt>銀行名</dt><dd>' + esc(res.bank.bank) + '</dd><dt>支店名</dt><dd>' + esc(res.bank.branch) + '</dd>' +
@@ -610,6 +625,18 @@
       $('orderError').textContent = '通信に失敗しました。お手数ですが、もう一度「注文を確定する」を押してください。';
     }).then(function () { btn.disabled = false; btn.textContent = '注文を確定する'; $('backToForm').disabled = false; });
   });
+
+  /* ---- 前に入ったことがある端末なら、パスワード画面を飛ばして開く ---- */
+  (function autoEnter() {
+    var saved = loadPw();
+    if (!saved) return;
+    $('gateBtn').disabled = true; $('gateBtn').textContent = '開いています…';
+    api('apiLogin', saved).then(function (res) {
+      if (res && res.ok) { enterShop(saved, res); return; }
+      clearPw(); // パスワードが変わっていたら、通常どおり入力してもらう
+    }).catch(function () { /* 通信できないときは通常どおり入力してもらう */ })
+      .then(function () { $('gateBtn').disabled = false; $('gateBtn').textContent = 'サイトを開く'; });
+  })();
 })();
 </script>
 </body>
